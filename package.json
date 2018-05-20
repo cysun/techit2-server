@@ -1,0 +1,29 @@
+{
+  "name": "techit2-server",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "test": "jasmine"
+  },
+  "dependencies": {
+    "bcrypt": "^2.0.1",
+    "cookie-parser": "~1.4.3",
+    "dotenv": "^5.0.1",
+    "express": "~4.16.0",
+    "jsonwebtoken": "^8.2.1",
+    "lodash": "^4.17.10",
+    "mongodb": "^3.1.0-beta4",
+    "mongoose": "^5.1.1",
+    "morgan": "~1.9.0",
+    "passport": "^0.4.0",
+    "passport-jwt": "^4.0.0",
+    "readline-sync": "^1.4.9",
+    "split": "^1.0.1",
+    "winston": "^2.4.2"
+  },
+  "devDependencies": {
+    "jasmine": "^3.1.0",
+    "request": "^2.86.0"
+  }
+}
