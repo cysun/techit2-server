@@ -11,6 +11,8 @@ const api = request.defaults({
 
 describe('Tickets API Tests:', function() {
   let userToken = '';
+  let adminToken = '';
+  let newTicketId = -1;
 
   beforeAll(function(done) {
     api.post(
@@ -23,6 +25,22 @@ describe('Tickets API Tests:', function() {
       },
       function(err, res, body) {
         userToken = body.token;
+        done();
+      }
+    );
+  });
+
+  beforeAll(function(done) {
+    api.post(
+      {
+        url: '/login',
+        form: {
+          username: 'techit',
+          password: 'abcd'
+        }
+      },
+      function(err, res, body) {
+        adminToken = body.token;
         done();
       }
     );
@@ -48,6 +66,38 @@ describe('Tickets API Tests:', function() {
         expect(body._id).toBeDefined();
         expect(body.status).toBe('OPEN');
         expect(body.priority).toBe('MEDIUM');
+        newTicketId = body._id;
+        done();
+      }
+    );
+  });
+
+  it('Set ticket status', function(done){
+    api.put(
+      {
+        url: '/tickets/1/status/CLOSED',
+        headers: {
+          Authorization: 'Bearer ' + adminToken
+        }
+      },
+      function(err, res, body) {
+        expect(res.statusCode).toBe(200);
+        done();
+      }
+    );
+  });
+
+  afterAll(function(done) {
+    if (newTicketId < 0) return done();
+    api.delete(
+      {
+        url: '/tickets/' + newTicketId,
+        headers: {
+          Authorization: 'Bearer ' + adminToken
+        }
+      },
+      function(err, res, body) {
+        if (res.statusCode != 200) console.log(res.statusCode);
         done();
       }
     );

@@ -46,7 +46,7 @@ let ticketSchema = new Schema(
     },
     technicians: [
       {
-        type: Schema.Types.ObjectId,
+        type: Number,
         ref: 'User'
       }
     ],
@@ -54,7 +54,7 @@ let ticketSchema = new Schema(
       {
         details: String,
         technician: {
-          id: Schema.Types.ObjectId,
+          id: Number,
           username: String
         },
         date: {

@@ -38,12 +38,30 @@ let userSchema = new mongoose.Schema(
       trim: true
     },
     phone: String,
-    department: String
+    department: String,
+    emailPreferences: {
+      ticketCreated: {
+        type: Boolean,
+        default: true
+      },
+      statusChanged: {
+        type: Boolean,
+        default: true
+      },
+      priorityChanged: {
+        type: Boolean,
+        defautl: true
+      },
+      updateAdded: {
+        type: Boolean,
+        default: true
+      }
+    }
   },
   { collection: 'users' }
 );
 
-userSchema.methods.hashPassword = function(password) {
+userSchema.statics.hashPassword = function(password) {
   return bcrypt.hash(password, saltRounds); // return promise
 };
 
