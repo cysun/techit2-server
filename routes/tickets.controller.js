@@ -39,6 +39,32 @@ router.post('/', async (req, res, next) => {
   });
 });
 
+// Search tickets
+router.get('/search', (req, res, next) => {
+  let type = req.query.type || req.body.type;
+  let term = req.query.term || req.body.term;
+  if (!term) return next(createError(400, 'Missing search term'));
+
+  let query = { $text: { $search: term } };
+  switch (type) {
+    case 'assigned':
+      query.technicians = req.user._id;
+      break;
+    case 'submitted':
+      query.createdBy = req.user._id;
+      break;
+    default:
+      logger.warn(`Unrecognized search type: ${type}`);
+  }
+
+  Ticket.find(query, { score: { $meta: 'textScore' } })
+    .sort({ score: { $meta: 'textScore' } })
+    .exec((err, tickets) => {
+      if (err) return next(err);
+      res.json(tickets);
+    });
+});
+
 // Get a ticket
 router.get('/:id', (req, res, next) => {
   Ticket.findById(req.params.id)

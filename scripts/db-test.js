@@ -145,13 +145,20 @@ ticket3 = {
   createdForEmail: user.email,
   subject: 'ME Lab Improvements',
   details: 'Update testing equipment in the ME lab.',
-  unit: 1,
   dateCreated: new Date(),
   dateAssigned: new Date(),
   priority: 'MEDIUM',
   status: 'ASSIGNED',
   technicians: [4],
-  updates: []
+  updates: [{
+    _id: ObjectId(),
+    details: 'Work order completed. Waiting approval by supervisor.',
+    technician: {
+      id: 4,
+      username: 'jjim',
+      date: new Date()
+    }
+  }]
 };
 
 db.tickets.insertMany([ticket1, ticket2, ticket3]);

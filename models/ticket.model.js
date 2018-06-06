@@ -70,12 +70,14 @@ let ticketSchema = new Schema(
 ticketSchema.index(
   {
     subject: 'text',
-    details: 'text'
+    details: 'text',
+    'updates.details': 'text'
   },
   {
     weights: {
-      subject: 5,
-      details: 1
+      subject: 10,
+      details: 5,
+      'updates.details': 1
     },
     name: 'TicketTextIndex'
   }
