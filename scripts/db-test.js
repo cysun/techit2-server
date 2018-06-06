@@ -17,11 +17,11 @@ db.sequences.drop();
 db.sequences.insertMany([
   {
     _id: 'user-id-sequence',
-    value: 10000
+    value: 1000
   },
   {
     _id: 'ticket-id-sequence',
-    value: 10000
+    value: 1000
   }
 ]);
 
@@ -50,8 +50,7 @@ supervisor1 = {
   firstName: 'John',
   lastName: 'Smith',
   email: 'jsmith1@localhost.localdomain',
-  phone: '323-343-2345',
-  unit: 1
+  phone: '323-343-2345'
 };
 
 supervisor2 = {
@@ -64,8 +63,7 @@ supervisor2 = {
   firstName: 'Jane',
   lastName: 'Smith',
   email: 'jsmith2@localhost.localdomain',
-  phone: '323-343-3456',
-  unit: 2
+  phone: '323-343-3456'
 };
 
 tech1 = {
@@ -78,8 +76,7 @@ tech1 = {
   firstName: 'Jimmy',
   lastName: 'Jim',
   email: 'jjim@localhost.localdomain',
-  phone: '323-343-4567',
-  unit: 1
+  phone: '323-343-4567'
 };
 
 tech2 = {
@@ -92,8 +89,7 @@ tech2 = {
   firstName: 'Bob',
   lastName: 'Lee',
   email: 'blee@localhost.localdomain',
-  phone: '323-343-5678',
-  unit: 1
+  phone: '323-343-5678'
 };
 
 user = {

@@ -38,25 +38,7 @@ let userSchema = new mongoose.Schema(
       trim: true
     },
     phone: String,
-    department: String,
-    emailPreferences: {
-      ticketCreated: {
-        type: Boolean,
-        default: true
-      },
-      statusChanged: {
-        type: Boolean,
-        default: true
-      },
-      priorityChanged: {
-        type: Boolean,
-        defautl: true
-      },
-      updateAdded: {
-        type: Boolean,
-        default: true
-      }
-    }
+    department: String
   },
   { collection: 'users' }
 );

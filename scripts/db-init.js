@@ -40,11 +40,11 @@ async function dbinit() {
   let result = await db.collection('sequences').insertMany([
     {
       _id: 'user-id-sequence',
-      value: 10000
+      value: 1000
     },
     {
       _id: 'ticket-id-sequence',
-      value: 10000
+      value: 1000
     }
   ]);
   console.log(`${result.insertedCount} sequence(s) created.`);
