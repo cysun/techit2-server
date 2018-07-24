@@ -1,6 +1,6 @@
 /**
  * This is a Mongo Shell script. Run it with Mongo shell on command line:
- *     mongo mongodb-test.js
+ *     mongo db-test.js
  * or inside Mongo shell: load('mongodb-test.js')
  */
 db = connect('localhost/techit2');

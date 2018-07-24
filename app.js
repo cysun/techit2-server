@@ -18,7 +18,10 @@ mongoose.connection.on('connected', () =>
 mongoose.connection.on('disconnected', () =>
   logger.info('Mongoose disconnected')
 );
-mongoose.connect(dbUrl);
+mongoose.connect(
+  dbUrl,
+  { useNewUrlParser: true }
+);
 
 /* Configure Express */
 
