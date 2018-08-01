@@ -34,8 +34,8 @@ admin = {
   roles: ['ADMIN'],
   local: true,
   enabled: true,
-  firstName: 'System',
-  lastName: 'Admin',
+  firstName: 'Admin',
+  lastName: 'System',
   email: 'techit@localhost.localdomain',
   phone: '323-343-1234'
 };
@@ -133,8 +133,8 @@ ticket2 = {
   dateCreated: new Date(),
   dateAssigned: new Date(),
   priority: 'MEDIUM',
-  status: 'ASSIGNED',
-  technicians: [4, 5],
+  status: 'OPEN',
+  technicians: [],
   updates: []
 };
 
@@ -148,17 +148,28 @@ ticket3 = {
   dateCreated: new Date(),
   dateAssigned: new Date(),
   priority: 'MEDIUM',
-  status: 'ASSIGNED',
+  status: 'OPEN',
   technicians: [4],
-  updates: [{
-    _id: ObjectId(),
-    details: 'Work order completed. Waiting approval by supervisor.',
-    technician: {
-      id: 4,
-      username: 'jjim',
-      date: new Date()
+  updates: [
+    {
+      _id: ObjectId(),
+      summary: 'Ticket assigned to Jimmy Jim',
+      technician: {
+        id: 2,
+        username: 'jsmith1',
+        date: new Date()
+      }
+    },
+    {
+      _id: ObjectId(),
+      details: 'Work order completed. Waiting approval by supervisor.',
+      technician: {
+        id: 4,
+        username: 'jjim',
+        date: new Date()
+      }
     }
-  }]
+  ]
 };
 
 db.tickets.insertMany([ticket1, ticket2, ticket3]);

@@ -62,49 +62,32 @@ async function ticketCreated(ticket, user) {
     locals: {
       appUrl,
       ticket,
-      user
+      user,
+      shortDate: new Date().toLocaleDateString()
     }
   });
-  logger.info(`Ticket-Created email sent to ${recipients}`);
+  logger.info(`TicketCreated email sent to ${recipients}`);
 }
 
-async function statusChanged(ticket, oldStatus, user) {
+async function ticketUpdated(ticket, user, update) {
   let recipients = await getRecipients(await getTicket(ticket._id), user);
   let result = await email.send({
-    template: 'status-changed',
+    template: 'ticket-updated',
     message: {
       bcc: recipients
     },
     locals: {
       appUrl,
       ticket,
-      oldStatus,
-      user
-    }
-  });
-  logger.info(`Status-Changed email sent to ${recipients}`);
-}
-
-async function updateAdded(ticketId, update, user) {
-  let ticket = await getTicket(ticketId);
-  let recipients = await getRecipients(ticket, user);
-  let result = await email.send({
-    template: 'update-added',
-    message: {
-      bcc: recipients
-    },
-    locals: {
-      appUrl,
-      ticket,
+      user,
       update,
-      user
+      shortDate: new Date().toLocaleDateString()
     }
   });
-  logger.info(`Update-Added email sent to ${recipients}`);
+  logger.info(`TicketUpdated email sent to ${recipients}`);
 }
 
 module.exports = {
   ticketCreated,
-  statusChanged,
-  updateAdded
+  ticketUpdated
 };

@@ -39,25 +39,26 @@ router.post('/', async (req, res, next) => {
   });
 });
 
+router.get('/submitted', (req, res, next) => {
+  Ticket.find({ createdBy: req.user._id }, (err, tickets) => {
+    if (err) return next(err);
+    res.json(tickets);
+  });
+});
+
+router.get('/assigned', (req, res, next) => {
+  Ticket.find({ technicians: req.user._id }, (err, tickets) => {
+    if (err) return next(err);
+    res.json(tickets);
+  });
+});
+
 // Search tickets
 router.get('/search', (req, res, next) => {
-  let type = req.query.type || req.body.type;
   let term = req.query.term || req.body.term;
   if (!term) return next(createError(400, 'Missing search term'));
 
-  let query = { $text: { $search: term } };
-  switch (type) {
-    case 'assigned':
-      query.technicians = req.user._id;
-      break;
-    case 'submitted':
-      query.createdBy = req.user._id;
-      break;
-    default:
-      logger.warn(`Unrecognized search type: ${type}`);
-  }
-
-  Ticket.find(query, { score: { $meta: 'textScore' } })
+  Ticket.find({ $text: { $search: term } }, { score: { $meta: 'textScore' } })
     .sort({ score: { $meta: 'textScore' } })
     .exec((err, tickets) => {
       if (err) return next(err);
@@ -68,9 +69,10 @@ router.get('/search', (req, res, next) => {
 // Get a ticket
 router.get('/:id', (req, res, next) => {
   Ticket.findById(req.params.id)
-    .populate('createdBy')
-    .populate('technicians')
+    .populate('createdBy', '-hash')
+    .populate('technicians', '-hash')
     .exec((err, ticket) => {
+      if (err) return next(err);
       if (ticket == null) return next(createError(404, 'No ticket found'));
       if (req.user._id != ticket.createdBy._id && !auth.isTechnician(req.user))
         return next(createError(403, 'Access Denied'));
@@ -87,64 +89,38 @@ router.delete('/:id', auth.allow('ADMIN'), (req, res, next) => {
   });
 });
 
-// Assign a technician to a ticket
-router.put('/:id/technicians/:userId', async (req, res, next) => {
-  if (
-    !auth.isSupervisor(req.user) &&
-    !(req.user._id == req.params.userId && auth.isTechnician(req.user))
-  )
-    return next(createError(403, 'Access Denied'));
+// Assign technician(s) to a ticket
+router.put('/:id/technicians', auth.allow('SUPERVISOR'), (req, res, next) => {
+  let technicians = _.compact(req.body.technicians);
+  let update = {
+    summary:
+      technicians.length > 0
+        ? 'Assigned technician(s) to ticket'
+        : 'Removed technician(s) from ticket',
+    technician: {
+      id: req.user._id,
+      username: req.user.username,
+      date: new Date()
+    }
+  };
 
-  try {
-    let ticket = await Ticket.findById(req.params.id);
-    if (ticket.technicians.includes(parseInt(req.params.userId)))
-      return next(createError(409, 'Technician already assigned'));
-
-    let oldStatus = ticket.status;
-    if (oldStatus == 'OPEN') ticket.status = 'ASSIGNED';
-    ticket.technicians.push(req.params.userId);
-    ticket = await ticket.save();
-    res.status(200).end();
-    logger.info(
-      `${req.user.username} assigned technician ${
-        req.params.userId
-      } to ticket ${req.params.id}`
-    );
-
-    if (oldStatus != ticket.status)
-      email.statusChanged(ticket, oldStatus, req.user);
-  } catch (err) {
-    return next(err);
-  }
-});
-
-// Remove a technican from a ticket
-router.delete('/:id/technicians/:userId', async (req, res, next) => {
-  if (!auth.isSupervisor(req.user))
-    return next(createError(403, 'Access Denied'));
-
-  try {
-    let ticket = await Ticket.findById(req.params.id);
-    if (!ticket.technicians.includes(parseInt(req.params.userId)))
-      return next(createError(404, 'Technician not found'));
-
-    ticket.technicians.pull(req.params.userId);
-    let oldStatus = ticket.status;
-    if (ticket.technicians.length == 0 && oldStatus == 'ASSIGNED')
-      ticket.status = 'OPEN';
-    ticket = await ticket.save();
-    res.status(200).end();
-    logger.info(
-      `${req.user.username} removed technician ${
-        req.params.userId
-      } from ticket ${req.params.id}`
-    );
-
-    if (oldStatus != ticket.status)
-      email.statusChanged(ticket, oldStatus, req.user);
-  } catch (err) {
-    return next(err);
-  }
+  Ticket.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: { technicians },
+      $push: { updates: update }
+    },
+    (err, ticket) => {
+      if (err) return next(err);
+      res.status(204).end();
+      logger.info(
+        `${req.user.username} set technician(s) ${technicians} to ticket ${
+          req.params.id
+        }`
+      );
+      email.ticketUpdated(ticket, req.user, update);
+    }
+  );
 });
 
 // Add an update to a ticket
@@ -154,94 +130,63 @@ router.post('/:id/updates', auth.allow('TECHNICIAN'), (req, res, next) => {
     technician: {
       id: req.user._id,
       username: req.user.username,
-      date: Date.now
+      date: new Date()
     }
   };
   Ticket.findByIdAndUpdate(
     req.params.id,
     { $push: { updates: update } },
-    err => {
+    (err, ticket) => {
       if (err) return next(err);
-      res.status(200).end();
+      res.status(204).end();
       logger.info(
         `${req.user.username} posted an update to ticket ${req.params.id}`
       );
-      email.updateAdded(req.params.id, update, req.user);
+      email.ticketUpdated(ticket, req.user, update);
     }
   );
 });
 
-// Set the status of a ticket
+// Set priority or status
 router.put(
-  '/:id/status/:status',
+  '/:id/:field/:value',
   auth.allow('SUPERVISOR'),
   async (req, res, next) => {
+    let field = req.params.field.toLowerCase();
+    let value = req.params.value.toUpperCase();
+    if (field != 'priority' && field != 'status')
+      return next(createError(400, 'Invalid field'));
+
     try {
       let ticket = await Ticket.findById(req.params.id);
       if (ticket == null) return next(createError(404, 'Ticket not found'));
-      if (ticket.status == req.params.status)
-        return next(createError(409, 'Status already set'));
+      let oldValue = ticket[field];
+      if (oldValue == value) return next(createError(409, 'Value already set'));
 
-      let oldStatus = ticket.status;
-      ticket.status = req.params.status;
+      ticket[field] = value;
       let update = {
-        details: req.body.comments,
+        summary: `Ticket ${field} set to ${value}`,
         technician: {
           id: req.user._id,
-          username: req.user.username,
-          date: Date.now()
-        }
+          username: req.user.username
+        },
+        date: new Date()
       };
-      if (!update.details)
-        update.details = `Set status to ${req.params.status}`;
+      if (req.body.details) update.details = req.body.details;
 
       ticket.updates.push(update);
       ticket = await ticket.save();
-      res.status(200).end();
+      res.status(204).end();
       logger.info(
-        `${req.user.username} set status of ticket ${req.params.id} to ${
-          req.params.status
-        }`
+        `${req.user.username} set ${field} of ticket ${
+          req.params.id
+        } to ${value}`
       );
-      email.statusChanged(ticket, oldStatus, req.user);
+
+      if (field == 'status') email.ticketUpdated(ticket, req.user, update);
     } catch (err) {
       return next(err);
     }
-  }
-);
-
-// Set the priority of a ticket
-router.put(
-  '/:id/priority/:priority',
-  auth.allow('SUPERVISOR'),
-  (req, res, next) => {
-    let update = {
-      details: req.body.comments,
-      technician: {
-        id: req.user._id,
-        username: req.user.username,
-        date: Date.now
-      }
-    };
-    if (!update.details)
-      update.details = `Set priority to ${req.params.priority}`;
-
-    Ticket.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: { priority: req.params.priority },
-        $push: { updates: update }
-      },
-      err => {
-        if (err) return next(err);
-        res.status(200).end();
-        logger.info(
-          `${req.user.username} set priority of ticket ${req.params.id} to ${
-            req.params.priority
-          }`
-        );
-      }
-    );
   }
 );
 

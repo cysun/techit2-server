@@ -1,0 +1,11 @@
+<p><a href="{{appUrl}}/tickets/{{ticket._id}}">Work Request #{{ticket._id}}:
+{{ticket.subject}}</a> has received a new update by
+{{update.technician.username}}:</p>
+
+{{#if update.summary}}
+<blockquote>{{update.summary}}</blockquote>
+{{else}}
+<blockquote>{{update.details}}</blockquote>
+{{/if}}
+
+<p>TWR Admin</p>

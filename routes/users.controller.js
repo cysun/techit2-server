@@ -17,21 +17,21 @@ router.get('/', auth.allow('ADMIN'), (req, res, next) => {
 });
 
 // Get all technicians
-router.get('/technicians', auth.allow('SUPERVISOR'), (req, res, next) => {
+router.get('/technicians', (req, res, next) => {
   User.find({ roles: 'TECHNICIAN' }, '-hash', (err, users) => {
     if (err) return next(err);
-    res.json(user);
+    res.json(users);
   });
 });
 
 // Create a user
 router.post('/', auth.allow('ADMIN'), async (req, res, next) => {
   let user = req.body;
-  if (!user.username || !user.password || !user.email)
+  if (!user.username || !user.email || (user.local && !user.password))
     return next(createError(400, 'Missing required field(s)'));
 
   user._id = (await Sequence.nextUserId()).value;
-  user.hash = User.hashPassword(user.password);
+  user.hash = user.local ? await User.hashPassword(user.password) : '';
   new User(user).save((err, user) => {
     if (err) return next(err);
     res.json(user);
@@ -69,9 +69,9 @@ router.patch('/:id', async (req, res, next) => {
   if (req.body.password)
     update.hash = await User.hashPassword(req.body.password);
 
-  User.findByIdAndUpdate(req.param.id, update, err => {
+  User.findByIdAndUpdate(req.params.id, update, { new: true }, (err, user) => {
     if (err) return next(err);
-    res.status(200).end();
+    res.json(user);
     logger.info(`${req.user.username} edited user ${req.params.id}`);
   });
 });

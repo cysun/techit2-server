@@ -41,7 +41,7 @@ let ticketSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ['OPEN', 'ASSIGNED', 'ONHOLD', 'COMPLETED', 'CLOSED'],
+      enum: ['OPEN', 'ONHOLD', 'COMPLETED', 'CLOSED'],
       default: 'OPEN'
     },
     technicians: [
@@ -52,6 +52,7 @@ let ticketSchema = new Schema(
     ],
     updates: [
       {
+        summary: String,
         details: String,
         technician: {
           id: Number,
