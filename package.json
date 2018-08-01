@@ -7,7 +7,9 @@
     "test": "jasmine"
   },
   "dependencies": {
+    "activedirectory": "^0.7.2",
     "bcrypt": "^2.0.1",
+    "bluebird": "^3.5.1",
     "cookie-parser": "~1.4.3",
     "dotenv": "^5.0.1",
     "email-templates": "^4.0.1",

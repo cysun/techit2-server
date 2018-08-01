@@ -1,5 +1,7 @@
 'use strict';
 
+global.Promise = require('bluebird');
+
 require('dotenv').config();
 
 const express = require('express');

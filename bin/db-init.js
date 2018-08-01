@@ -9,7 +9,7 @@ const saltRounds = 10;
 /* Get admin user information */
 
 var admin = {
-  _id: 1000,
+  _id: 1,
   roles: ['ADMIN'],
   local: true,
   enabled: true,
@@ -34,7 +34,10 @@ admin.hash = bcrypt.hashSync(password, saltRounds);
 async function dbinit() {
   let dbUrl = process.env.DB_URL;
   let dbName = dbUrl.substring(dbUrl.lastIndexOf('/') + 1);
-  const client = await MongoClient.connect(dbUrl);
+  const client = await MongoClient.connect(
+    dbUrl,
+    { useNewUrlParser: true }
+  );
 
   let db = client.db(dbName);
   let result = await db.collection('sequences').insertMany([
