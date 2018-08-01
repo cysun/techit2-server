@@ -62,3 +62,6 @@ typings/
 
 # Vim swap files
 *.swp
+
+# /public will be linked to the Angular client
+public

@@ -10,13 +10,10 @@ const Ticket = require('./models/ticket.model');
 const appUrl = process.env.APP_URL || 'http://localhost:3000';
 
 const transport = nodemailer.createTransport({
-  host: process.env.SMTP_SERVER || 'localhost',
+  host: 'localhost',
   port: 25,
   secure: false,
-  auth: {
-    user: process.env.SMTP_USERNAME || 'cysun@localhost.localdomain',
-    pass: process.env.SMTP_PASSWORD || 'abcd'
-  }
+  ignoreTLS: true
 });
 
 const email = new Email({
@@ -52,39 +49,49 @@ async function getRecipients(ticket, user) {
 }
 
 async function ticketCreated(ticket, user) {
-  let supervisors = await User.find({ roles: 'SUPERVISOR' }).exec();
-  let recipients = supervisors.map(supervisor => supervisor.email);
-  let result = await email.send({
-    template: 'ticket-created',
-    message: {
-      bcc: recipients
-    },
-    locals: {
-      appUrl,
-      ticket,
-      user,
-      shortDate: new Date().toLocaleDateString()
-    }
-  });
-  logger.info(`TicketCreated email sent to ${recipients}`);
+  try {
+    let supervisors = await User.find({ roles: 'SUPERVISOR' }).exec();
+    let recipients = supervisors.map(supervisor => supervisor.email);
+    let result = await email.send({
+      template: 'ticket-created',
+      message: {
+        bcc: recipients
+      },
+      locals: {
+        appUrl,
+        ticket,
+        user,
+        shortDate: new Date().toLocaleDateString()
+      }
+    });
+    logger.info(`TicketCreated email sent to ${recipients}`);
+  } catch (err) {
+    logger.error('Failed to send TicketCreated email');
+    logger.error(err);
+  }
 }
 
 async function ticketUpdated(ticket, user, update) {
-  let recipients = await getRecipients(await getTicket(ticket._id), user);
-  let result = await email.send({
-    template: 'ticket-updated',
-    message: {
-      bcc: recipients
-    },
-    locals: {
-      appUrl,
-      ticket,
-      user,
-      update,
-      shortDate: new Date().toLocaleDateString()
-    }
-  });
-  logger.info(`TicketUpdated email sent to ${recipients}`);
+  try {
+    let recipients = await getRecipients(await getTicket(ticket._id), user);
+    let result = await email.send({
+      template: 'ticket-updated',
+      message: {
+        bcc: recipients
+      },
+      locals: {
+        appUrl,
+        ticket,
+        user,
+        update,
+        shortDate: new Date().toLocaleDateString()
+      }
+    });
+    logger.info(`TicketUpdated email sent to ${recipients}`);
+  } catch (err) {
+    logger.error('Failed to send TicketUpdated email');
+    logger.error(err);
+  }
 }
 
 module.exports = {
