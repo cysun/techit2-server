@@ -81,7 +81,7 @@ describe('Tickets API Tests:', function() {
         }
       },
       function(err, res, body) {
-        expect(res.statusCode).toBe(200);
+        expect(res.statusCode).toBe(204);
         done();
       }
     );

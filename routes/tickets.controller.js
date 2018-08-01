@@ -84,7 +84,7 @@ router.get('/:id', (req, res, next) => {
 router.delete('/:id', auth.allow('ADMIN'), (req, res, next) => {
   Ticket.findByIdAndRemove(req.params.id, err => {
     if (err) return next(err);
-    res.status(200).end();
+    res.status(204).end();
     logger.info(`${req.user.username} deleted ticket ${req.params.id}`);
   });
 });
@@ -107,7 +107,7 @@ router.put('/:id/technicians', auth.allow('SUPERVISOR'), (req, res, next) => {
   Ticket.findByIdAndUpdate(
     req.params.id,
     {
-      $set: { technicians },
+      $set: { technicians: technicians, dateUpdated: new Date() },
       $push: { updates: update }
     },
     (err, ticket) => {
@@ -135,7 +135,10 @@ router.post('/:id/updates', auth.allow('TECHNICIAN'), (req, res, next) => {
   };
   Ticket.findByIdAndUpdate(
     req.params.id,
-    { $push: { updates: update } },
+    {
+      $set: { dateUpdated: new Date() },
+      $push: { updates: update }
+    },
     (err, ticket) => {
       if (err) return next(err);
       res.status(204).end();
@@ -175,6 +178,7 @@ router.put(
       if (req.body.details) update.details = req.body.details;
 
       ticket.updates.push(update);
+      ticket.dateUpdated = new Date();
       ticket = await ticket.save();
       res.status(204).end();
       logger.info(

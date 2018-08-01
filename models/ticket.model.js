@@ -31,9 +31,7 @@ let ticketSchema = new Schema(
       type: Date,
       default: Date.now
     },
-    dateAssigned: Date,
     dateUpdated: Date,
-    dateClosed: Date,
     priority: {
       type: String,
       enum: ['LOW', 'MEDIUM', 'HIGH'],
