@@ -78,7 +78,7 @@ app.use(function(err, req, res, next) {
 
 async function shutdown(callback) {
   await mongoose.disconnect();
-  if (callback) callback();
+  if (typeof callback === 'function') callback();
   else process.exit(0);
 }
 
